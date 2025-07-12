@@ -29,6 +29,11 @@ import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-jsx';
 import 'prismjs/components/prism-css';
+import axios from 'axios';
+
+// API Configuration
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API = `${BACKEND_URL}/api`;
 
 // Mock data for conversations
 const mockConversations = [
