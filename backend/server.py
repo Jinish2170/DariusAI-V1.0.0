@@ -39,6 +39,35 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+# Chat Models
+class ChatMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    role: str  # 'user' or 'assistant'
+    content: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    avatar: str
+
+class Conversation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    messages: List[ChatMessage] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SendMessageRequest(BaseModel):
+    conversation_id: Optional[str] = None
+    message: str
+    title: Optional[str] = None
+
+class StreamChatResponse(BaseModel):
+    content: str
+    is_final: bool = False
+
+# Constants
+GEMINI_API_KEY = "AIzaSyBqf1ApgKXO0iRrMCVNrpnJGZaXk5zyMts"
+AI_AVATAR = "https://images.unsplash.com/photo-1631882456892-54a30e92fe4f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwyfHxyb2JvdCUyMGF2YXRhcnxlbnwwfHx8fDE3NTIzMTY5NDh8MA&ixlib=rb-4.1.0&q=85"
+USER_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHx1c2VyJTIwYXZhdGFyfGVufDB8fHx8MTc1MjMxNjk1N3ww&ixlib=rb-4.1.0&q=85"
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
