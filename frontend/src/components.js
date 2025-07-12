@@ -98,6 +98,7 @@ export const Sidebar = ({
   currentConversation, 
   onSelectConversation, 
   onNewChat, 
+  onDeleteConversation,
   darkMode, 
   toggleDarkMode,
   sidebarOpen,
@@ -108,6 +109,40 @@ export const Sidebar = ({
   const filteredConversations = conversations.filter(conv =>
     conv.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const getLastMessage = (conversation) => {
+    if (conversation.messages && conversation.messages.length > 0) {
+      const lastMessage = conversation.messages[conversation.messages.length - 1];
+      return lastMessage.content.length > 60 
+        ? lastMessage.content.substring(0, 60) + '...'
+        : lastMessage.content;
+    }
+    return 'No messages';
+  };
+
+  const handleDeleteConversation = async (e, conversationId) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this conversation?')) {
+      await onDeleteConversation(conversationId);
+    }
+  };
 
   return (
     <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out fixed lg:relative z-30 w-72 h-full ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border-r flex flex-col`}>
@@ -157,45 +192,61 @@ export const Sidebar = ({
 
       {/* Conversations */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {filteredConversations.map((conversation) => (
-          <div
-            key={conversation.id}
-            onClick={() => {
-              onSelectConversation(conversation);
-              setSidebarOpen(false);
-            }}
-            className={`p-3 rounded-lg cursor-pointer transition-colors ${
-              currentConversation?.id === conversation.id
-                ? darkMode 
-                  ? 'bg-purple-600 text-white' 
-                  : 'bg-purple-50 text-purple-900 border border-purple-200'
-                : darkMode
-                  ? 'hover:bg-gray-800 text-gray-300'
-                  : 'hover:bg-gray-50 text-gray-700'
-            }`}
-          >
-            <div className="flex items-start space-x-3">
-              <MessageSquare className="w-4 h-4 mt-1 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{conversation.title}</p>
-                <p className={`text-xs truncate mt-1 ${
-                  currentConversation?.id === conversation.id
-                    ? darkMode ? 'text-purple-200' : 'text-purple-600'
-                    : darkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  {conversation.lastMessage}
-                </p>
-                <p className={`text-xs mt-1 ${
-                  currentConversation?.id === conversation.id
-                    ? darkMode ? 'text-purple-200' : 'text-purple-600'
-                    : darkMode ? 'text-gray-500' : 'text-gray-400'
-                }`}>
-                  {conversation.timestamp}
-                </p>
+        {filteredConversations.length === 0 ? (
+          <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No conversations yet</p>
+            <p className="text-xs mt-1">Start a new chat to begin</p>
+          </div>
+        ) : (
+          filteredConversations.map((conversation) => (
+            <div
+              key={conversation.id}
+              onClick={() => {
+                onSelectConversation(conversation);
+                setSidebarOpen(false);
+              }}
+              className={`p-3 rounded-lg cursor-pointer transition-colors group relative ${
+                currentConversation?.id === conversation.id
+                  ? darkMode 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-purple-50 text-purple-900 border border-purple-200'
+                  : darkMode
+                    ? 'hover:bg-gray-800 text-gray-300'
+                    : 'hover:bg-gray-50 text-gray-700'
+              }`}
+            >
+              <div className="flex items-start space-x-3">
+                <MessageSquare className="w-4 h-4 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{conversation.title}</p>
+                  <p className={`text-xs truncate mt-1 ${
+                    currentConversation?.id === conversation.id
+                      ? darkMode ? 'text-purple-200' : 'text-purple-600'
+                      : darkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {getLastMessage(conversation)}
+                  </p>
+                  <p className={`text-xs mt-1 ${
+                    currentConversation?.id === conversation.id
+                      ? darkMode ? 'text-purple-200' : 'text-purple-600'
+                      : darkMode ? 'text-gray-500' : 'text-gray-400'
+                  }`}>
+                    {formatTimestamp(conversation.updated_at)}
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => handleDeleteConversation(e, conversation.id)}
+                  className={`opacity-0 group-hover:opacity-100 p-1 rounded ${
+                    darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                  } transition-all`}
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Settings */}
