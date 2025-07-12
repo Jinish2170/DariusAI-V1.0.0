@@ -36,7 +36,8 @@ import {
   RotateCcw,
   Volume2,
   Pause,
-  Play
+  Play,
+  Check
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import Prism from 'prismjs';
