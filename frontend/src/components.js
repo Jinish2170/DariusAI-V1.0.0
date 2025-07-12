@@ -286,6 +286,24 @@ export const Message = ({ message, darkMode }) => {
     }
   };
 
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    
+    try {
+      // Handle both ISO string and display format
+      if (typeof timestamp === 'string' && timestamp.includes(':') && !timestamp.includes('T')) {
+        return timestamp; // Already formatted (e.g., "2:30 PM")
+      }
+      
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return timestamp; // Return original if invalid
+      
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+      return timestamp; // Return original on error
+    }
+  };
+
   const CodeBlock = ({ language, children }) => {
     useEffect(() => {
       Prism.highlightAll();
@@ -323,7 +341,7 @@ export const Message = ({ message, darkMode }) => {
             {isUser ? 'You' : 'AI Assistant'}
           </span>
           <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-            {message.timestamp}
+            {formatTimestamp(message.timestamp)}
           </span>
         </div>
         <div className={`prose max-w-none ${darkMode ? 'prose-invert' : ''}`}>
