@@ -593,11 +593,29 @@ export const ChatArea = ({
 
 // Main Chat App Component
 export const ChatApp = () => {
-  const [conversations, setConversations] = useState(mockConversations);
+  const [conversations, setConversations] = useState([]);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load conversations on component mount
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      const convs = await api.getConversations();
+      setConversations(convs);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -608,114 +626,92 @@ export const ChatApp = () => {
     setSidebarOpen(false);
   };
 
-  const handleSelectConversation = (conversation) => {
-    setCurrentConversation(conversation);
+  const handleSelectConversation = async (conversation) => {
+    try {
+      // Load full conversation data if needed
+      const fullConversation = await api.getConversation(conversation.id);
+      setCurrentConversation(fullConversation);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      setCurrentConversation(conversation);
+    }
   };
 
-  const generateAIResponse = (userMessage) => {
-    // Mock AI responses based on keywords
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('react') || lowerMessage.includes('javascript') || lowerMessage.includes('frontend')) {
-      return "I'd be happy to help with React and frontend development! Here are some key concepts:\n\n## Modern React Patterns\n\n```jsx\n// Custom Hook Example\nconst useCounter = (initialValue = 0) => {\n  const [count, setCount] = useState(initialValue);\n  \n  const increment = useCallback(() => {\n    setCount(c => c + 1);\n  }, []);\n  \n  const decrement = useCallback(() => {\n    setCount(c => c - 1);\n  }, []);\n  \n  return { count, increment, decrement };\n};\n```\n\n**Key Benefits:**\n- Reusable logic\n- Clean component code\n- Easy testing\n\nWhat specific React topic would you like to explore further?";
-    } else if (lowerMessage.includes('python') || lowerMessage.includes('data') || lowerMessage.includes('pandas')) {
-      return "Python is excellent for data analysis! Here's a quick example:\n\n```python\nimport pandas as pd\nimport matplotlib.pyplot as plt\n\n# Create sample data\ndata = {\n    'Name': ['Alice', 'Bob', 'Charlie'],\n    'Age': [25, 30, 35],\n    'Salary': [50000, 60000, 70000]\n}\n\ndf = pd.DataFrame(data)\n\n# Basic analysis\nprint(df.describe())\nprint(df.groupby('Age')['Salary'].mean())\n\n# Visualization\ndf.plot(x='Age', y='Salary', kind='scatter')\nplt.show()\n```\n\nWhat kind of data analysis are you working on?";
-    } else if (lowerMessage.includes('ai') || lowerMessage.includes('machine learning') || lowerMessage.includes('ml')) {
-      return "AI and Machine Learning are fascinating fields! Here's an overview:\n\n## Key Areas:\n\n### 1. **Supervised Learning**\n- Classification (predicting categories)\n- Regression (predicting numbers)\n- Examples: Image recognition, price prediction\n\n### 2. **Unsupervised Learning**\n- Clustering (grouping similar data)\n- Dimensionality reduction\n- Examples: Customer segmentation, data compression\n\n### 3. **Deep Learning**\n```python\nimport tensorflow as tf\n\nmodel = tf.keras.Sequential([\n    tf.keras.layers.Dense(128, activation='relu'),\n    tf.keras.layers.Dropout(0.2),\n    tf.keras.layers.Dense(10, activation='softmax')\n])\n\nmodel.compile(optimizer='adam',\n              loss='sparse_categorical_crossentropy',\n              metrics=['accuracy'])\n```\n\nWhat specific AI topic interests you most?";
-    } else {
-      return `That's an interesting question about "${userMessage}"! I'd be happy to help you explore this topic further.\n\nHere are some ways I can assist:\n\n• **Detailed explanations** - I can break down complex concepts\n• **Code examples** - Practical implementations in various languages\n• **Best practices** - Industry-standard approaches\n• **Troubleshooting** - Help debug issues\n• **Learning resources** - Suggest tutorials and documentation\n\nCould you provide more specific details about what you'd like to know? For example:\n- What's your experience level with this topic?\n- Are you working on a particular project?\n- What specific aspect would you like to focus on?\n\nThe more context you provide, the better I can tailor my response to your needs!`;
+  const handleDeleteConversation = async (conversationId) => {
+    try {
+      const success = await api.deleteConversation(conversationId);
+      if (success) {
+        setConversations(conversations.filter(conv => conv.id !== conversationId));
+        if (currentConversation?.id === conversationId) {
+          setCurrentConversation(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
     }
   };
 
   const handleSendMessage = async (message) => {
     setIsTyping(true);
 
-    // Create or update conversation
-    let updatedConversation;
-    
-    if (currentConversation) {
-      // Add to existing conversation
-      const userMessage = {
-        id: currentConversation.messages.length + 1,
-        role: 'user',
-        content: message,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        avatar: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHx1c2VyJTIwYXZhdGFyfGVufDB8fHx8MTc1MjMxNjk1N3ww&ixlib=rb-4.1.0&q=85"
-      };
+    try {
+      const response = await api.sendMessage(
+        currentConversation?.id, 
+        message,
+        currentConversation ? null : message.substring(0, 50)
+      );
 
-      updatedConversation = {
-        ...currentConversation,
-        messages: [...currentConversation.messages, userMessage],
-        lastMessage: message,
-        timestamp: 'Just now'
-      };
-    } else {
-      // Create new conversation
-      const newId = conversations.length + 1;
-      updatedConversation = {
-        id: newId,
-        title: message.length > 50 ? message.substring(0, 50) + '...' : message,
-        lastMessage: message,
-        timestamp: 'Just now',
-        messages: [{
-          id: 1,
-          role: 'user',
-          content: message,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          avatar: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHx1c2VyJTIwYXZhdGFyfGVufDB8fHx8MTc1MjMxNjk1N3ww&ixlib=rb-4.1.0&q=85"
-        }]
-      };
-    }
-
-    // Update current conversation
-    setCurrentConversation(updatedConversation);
-
-    // Update conversations list
-    if (currentConversation) {
-      setConversations(conversations.map(conv => 
-        conv.id === currentConversation.id ? updatedConversation : conv
-      ));
-    } else {
-      setConversations([updatedConversation, ...conversations]);
-    }
-
-    // Simulate AI response delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Generate AI response
-    const aiResponse = generateAIResponse(message);
-    const assistantMessage = {
-      id: updatedConversation.messages.length + 1,
-      role: 'assistant',
-      content: aiResponse,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      avatar: "https://images.unsplash.com/photo-1631882456892-54a30e92fe4f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwyfHxyb2JvdCUyMGF2YXRhcnxlbnwwfHx8fDE3NTIzMTY5NDh8MA&ixlib=rb-4.1.0&q=85"
-    };
-
-    const finalConversation = {
-      ...updatedConversation,
-      messages: [...updatedConversation.messages, assistantMessage],
-      lastMessage: aiResponse.substring(0, 100) + '...'
-    };
-
-    setCurrentConversation(finalConversation);
-    setConversations(prevConversations => {
+      // Update or create conversation
       if (currentConversation) {
-        return prevConversations.map(conv => 
-          conv.id === currentConversation.id ? finalConversation : conv
-        );
+        // Update existing conversation
+        const updatedConversation = {
+          ...currentConversation,
+          messages: [
+            ...currentConversation.messages,
+            response.user_message,
+            response.ai_message
+          ],
+          updated_at: new Date().toISOString()
+        };
+        setCurrentConversation(updatedConversation);
+        
+        // Update in conversations list
+        setConversations(conversations.map(conv => 
+          conv.id === currentConversation.id 
+            ? { ...conv, updated_at: updatedConversation.updated_at }
+            : conv
+        ));
       } else {
-        return [finalConversation, ...prevConversations.slice(1)];
+        // Create new conversation and load it
+        const newConversation = await api.getConversation(response.conversation_id);
+        setCurrentConversation(newConversation);
+        
+        // Add to conversations list
+        setConversations([newConversation, ...conversations]);
       }
-    });
-
-    setIsTyping(false);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // You could show an error toast here
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   // Close sidebar when clicking outside on mobile
   const handleOverlayClick = () => {
     setSidebarOpen(false);
   };
+
+  if (loading) {
+    return (
+      <div className={`h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className="flex flex-col items-center space-y-4">
+          <Sparkles className={`w-8 h-8 animate-pulse ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+          <p className={`text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>Loading AI Chat...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`h-screen flex ${darkMode ? 'bg-gray-900' : 'bg-white'} transition-colors duration-200`}>
@@ -733,6 +729,7 @@ export const ChatApp = () => {
         currentConversation={currentConversation}
         onSelectConversation={handleSelectConversation}
         onNewChat={handleNewChat}
+        onDeleteConversation={handleDeleteConversation}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
         sidebarOpen={sidebarOpen}
