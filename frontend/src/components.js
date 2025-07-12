@@ -35,75 +35,62 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
-// Mock data for conversations
-const mockConversations = [
-  {
-    id: 1,
-    title: "React Best Practices",
-    lastMessage: "What are the latest React best practices for 2025?",
-    timestamp: "2 hours ago",
-    messages: [
-      {
-        id: 1,
-        role: "user",
-        content: "What are the latest React best practices for 2025?",
-        timestamp: "2:30 PM",
-        avatar: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHx1c2VyJTIwYXZhdGFyfGVufDB8fHx8MTc1MjMxNjk1N3ww&ixlib=rb-4.1.0&q=85"
-      },
-      {
-        id: 2,
-        role: "assistant",
-        content: "Here are the latest React best practices for 2025:\n\n## 1. **React 19 Features**\n- Use React Server Components for better performance\n- Implement concurrent features like Suspense and useTransition\n- Leverage the new `use()` hook for asynchronous operations\n\n## 2. **TypeScript Integration**\n```typescript\ninterface ComponentProps {\n  title: string;\n  onAction: (id: string) => void;\n}\n\nconst MyComponent: React.FC<ComponentProps> = ({ title, onAction }) => {\n  return <button onClick={() => onAction('id')}>{title}</button>;\n};\n```\n\n## 3. **Performance Optimization**\n- Use React.memo() wisely\n- Implement proper code splitting\n- Optimize bundle sizes with tree shaking\n\n## 4. **State Management**\n- Use Zustand or Jotai for lightweight state management\n- Consider React Query for server state\n- Keep local state minimal\n\nWould you like me to elaborate on any of these points?",
-        timestamp: "2:31 PM",
-        avatar: "https://images.unsplash.com/photo-1631882456892-54a30e92fe4f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwyfHxyb2JvdCUyMGF2YXRhcnxlbnwwfHx8fDE3NTIzMTY5NDh8MA&ixlib=rb-4.1.0&q=85"
-      }
-    ]
+// API Functions
+const api = {
+  async getConversations() {
+    try {
+      const response = await axios.get(`${API}/conversations`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      return [];
+    }
   },
-  {
-    id: 2,
-    title: "Python Data Analysis",
-    lastMessage: "How to analyze CSV data with pandas?",
-    timestamp: "1 day ago",
-    messages: [
-      {
-        id: 1,
-        role: "user",
-        content: "How to analyze CSV data with pandas?",
-        timestamp: "Yesterday 3:15 PM",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwyfHx1c2VyJTIwYXZhdGFyfGVufDB8fHx8MTc1MjMxNjk1N3ww&ixlib=rb-4.1.0&q=85"
-      },
-      {
-        id: 2,
-        role: "assistant",
-        content: "Here's a comprehensive guide to analyzing CSV data with pandas:\n\n## 1. **Loading Data**\n```python\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Load CSV file\ndf = pd.read_csv('your_data.csv')\n\n# Display basic info\nprint(df.head())\nprint(df.info())\nprint(df.describe())\n```\n\n## 2. **Data Exploration**\n```python\n# Check for missing values\nprint(df.isnull().sum())\n\n# Unique values in each column\nfor col in df.columns:\n    print(f\"{col}: {df[col].nunique()} unique values\")\n\n# Data types\nprint(df.dtypes)\n```\n\n## 3. **Data Cleaning**\n```python\n# Handle missing values\ndf.dropna()  # Remove rows with NaN\ndf.fillna(0)  # Fill NaN with 0\ndf.fillna(method='ffill')  # Forward fill\n\n# Remove duplicates\ndf.drop_duplicates()\n\n# Data type conversion\ndf['date_column'] = pd.to_datetime(df['date_column'])\ndf['numeric_column'] = pd.to_numeric(df['numeric_column'])\n```\n\n## 4. **Analysis Examples**\n```python\n# Group by operations\ngrouped = df.groupby('category').agg({\n    'sales': ['sum', 'mean', 'count'],\n    'profit': 'sum'\n})\n\n# Filtering\nfiltered = df[df['sales'] > 1000]\n\n# Sorting\nsorted_df = df.sort_values('sales', ascending=False)\n\n# Basic statistics\ncorrelation = df.corr()\n```\n\nWould you like me to show specific analysis techniques for your use case?",
-        timestamp: "Yesterday 3:17 PM",
-        avatar: "https://images.unsplash.com/photo-1633957897986-70e83293f3ff?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwxfHxyb2JvdCUyMGF2YXRhcnxlbnwwfHx8fDE3NTIzMTY5NDh8MA&ixlib=rb-4.1.0&q=85"
-      }
-    ]
+
+  async getConversation(conversationId) {
+    try {
+      const response = await axios.get(`${API}/conversations/${conversationId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      return null;
+    }
   },
-  {
-    id: 3,
-    title: "AI Ethics Discussion",
-    lastMessage: "What are the key ethical considerations in AI development?",
-    timestamp: "3 days ago",
-    messages: [
-      {
-        id: 1,
-        role: "user",
-        content: "What are the key ethical considerations in AI development?",
-        timestamp: "3 days ago",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwzfHx1c2VyJTIwYXZhdGFyfGVufDB8fHx8MTc1MjMxNjk1N3ww&ixlib=rb-4.1.0&q=85"
-      },
-      {
-        id: 2,
-        role: "assistant",
-        content: "AI ethics is a crucial field that addresses the moral implications of artificial intelligence. Here are the key considerations:\n\n## **Core Ethical Principles**\n\n### 1. **Fairness and Bias Prevention**\n- Ensuring AI systems don't discriminate against protected groups\n- Regular auditing for algorithmic bias\n- Diverse training data and development teams\n\n### 2. **Transparency and Explainability**\n- Making AI decision-making processes understandable\n- Providing clear explanations for AI outputs\n- Open documentation of model capabilities and limitations\n\n### 3. **Privacy and Data Protection**\n- Implementing strong data protection measures\n- Obtaining informed consent for data usage\n- Minimizing data collection to what's necessary\n\n### 4. **Accountability and Responsibility**\n- Clear chains of responsibility for AI decisions\n- Human oversight and intervention capabilities\n- Mechanisms for addressing AI-caused harm\n\n### 5. **Safety and Reliability**\n- Rigorous testing before deployment\n- Fail-safe mechanisms\n- Continuous monitoring and updates\n\n## **Emerging Considerations**\n\n- **Environmental Impact**: Energy consumption of large AI models\n- **Labor Displacement**: Supporting workers affected by automation\n- **Autonomy**: Maintaining human agency and decision-making\n- **Global Governance**: International cooperation on AI standards\n\nThese principles should guide every stage of AI development, from design to deployment and beyond.",
-        timestamp: "3 days ago",
-        avatar: "https://images.unsplash.com/photo-1631882456892-54a30e92fe4f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwyfHxyb2JvdCUyMGF2YXRhcnxlbnwwfHx8fDE3NTIzMTY5NDh8MA&ixlib=rb-4.1.0&q=85"
-      }
-    ]
+
+  async sendMessage(conversationId, message, title = null) {
+    try {
+      const response = await axios.post(`${API}/chat/send`, {
+        conversation_id: conversationId,
+        message,
+        title
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  },
+
+  async deleteConversation(conversationId) {
+    try {
+      await axios.delete(`${API}/conversations/${conversationId}`);
+      return true;
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      return false;
+    }
+  },
+
+  async updateConversationTitle(conversationId, title) {
+    try {
+      await axios.put(`${API}/conversations/${conversationId}/title`, { title });
+      return true;
+    } catch (error) {
+      console.error('Error updating conversation title:', error);
+      return false;
+    }
   }
-];
+};
 
 // Sidebar Component
 export const Sidebar = ({ 
