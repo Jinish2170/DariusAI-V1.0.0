@@ -64,7 +64,7 @@ class StreamChatResponse(BaseModel):
     is_final: bool = False
 
 # Constants
-GEMINI_API_KEY = "AIzaSyBqf1ApgKXO0iRrMCVNrpnJGZaXk5zyMts"
+GEMINI_API_KEY = "your api key"
 AI_AVATAR = "https://images.unsplash.com/photo-1631882456892-54a30e92fe4f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2MzR8MHwxfHNlYXJjaHwyfHxyb2JvdCUyMGF2YXRhcnxlbnwwfHx8fDE3NTIzMTY5NDh8MA&ixlib=rb-4.1.0&q=85"
 USER_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHx1c2VyJTIwYXZhdGFyfGVufDB8fHx8MTc1MjMxNjk1N3ww&ixlib=rb-4.1.0&q=85"
 
